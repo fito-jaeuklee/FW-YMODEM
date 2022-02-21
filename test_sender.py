@@ -3,11 +3,51 @@ import sys
 import time
 import serial
 from YModem import YModem
-# from tkinter import filedialog
 import glob
 from cell_on_off_control import Scanning
+import datetime
+
+global global_path
+
+
+def make_new_log_file(file_path):
+    now = datetime.datetime.now()
+    log_file = open(file_path + "/" + "%s_ymodem.log" % now.strftime('%Y_%m_%d_%H_%M'), "w+")
+    print(log_file.name)
+
+    return log_file
+
+
+def callback_making_log_file_name(log_file_path):
+    global global_path
+    global_path = log_file_path
+    print("123128747y125835h", global_path)
+    # return global_path
+
+
+def time_header():
+    now = datetime.datetime.now()
+    return now.strftime("%Y_%m_%d_%H_%M_%S ")
+
+
+def write_log(msg):
+    global global_path
+    try:
+        file_object = open(global_path, 'a')
+        file_object.write(
+            str(time_header()) + msg + "\r\n")
+        file_object.close()
+    except:
+        pass
+
 
 if __name__ == '__main__':
+    fw_success_device_num = 0
+    fw_fail_device_num = 0
+
+    log_file = make_new_log_file(".")
+    callback_making_log_file_name(log_file.name)
+
     save_current_cell_position = 0
     cell_ctr = Scanning()
     # FIRMWARE_DIRECTORY = filedialog.askopenfilename()
@@ -16,11 +56,14 @@ if __name__ == '__main__':
     print(abs_path)
 
     print("STM MCU firmware directory = ", abs_path)
+    write_log("STM MCU firmware directory = ", abs_path)
 
     for i in range(1, 37):
         save_current_cell_position = i
         print("\n  ======== Start cell %d update ! ========" % save_current_cell_position)
+        write_log("======== Start cell %d update ! ========" % save_current_cell_position)
         print("         Waiting for update ....             ")
+        write_log("         Waiting for update ....             ")
         try:
             cell_com_port = cell_ctr.main(i)
 
@@ -47,12 +90,27 @@ if __name__ == '__main__':
             sender = YModem(sender_getc, sender_putc)
 
             print("           Downloading....        ")
+            write_log("           Downloading....        ")
             sent = sender.send_file(abs_path)
 
             print(" ======== Cell %d FW update DONE!  ======== \n" % save_current_cell_position)
+            write_log(" ======== Cell %d FW update DONE!  ======== \n" % save_current_cell_position)
+            fw_success_device_num = fw_success_device_num + 1
             serial_io.close()
-        except:
+        except Exception as e:
+            print(e)
+            if "USB" in str(e):
+                write_log("Dock usb not connected ! ")
+                sys.exit(1)
             print("Fail Cell number = ", save_current_cell_position)
+            write_log("Fail Cell number = ", save_current_cell_position)
+            fw_fail_device_num = fw_fail_device_num + 1
+
             print("")
             time.sleep(5)
             pass
+
+    print("All process done !")
+    write_log("All process done !")
+    print("Total = 36 / success = %d / fail = %d" % (fw_success_device_num, fw_fail_device_num))
+    write_log("Total = 36 / success = %d / fail = %d" % (fw_success_device_num, fw_fail_device_num))

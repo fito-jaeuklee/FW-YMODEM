@@ -42,21 +42,35 @@ def write_log(msg):
 
 
 if __name__ == '__main__':
+    bin_fw_name = "Cell_X4_V4.6.binary"
+
+    if getattr(sys, 'frozen', False):
+        program_directory = os.path.dirname(os.path.abspath(sys.executable))
+    else:
+        program_directory = os.path.dirname(os.path.abspath(__file__))
+
+    print(program_directory)
+
     fw_success_device_num = 0
     fw_fail_device_num = 0
 
-    log_file = make_new_log_file(".")
+    log_file = make_new_log_file(program_directory)
     callback_making_log_file_name(log_file.name)
 
     save_current_cell_position = 0
     cell_ctr = Scanning()
     # FIRMWARE_DIRECTORY = filedialog.askopenfilename()
-    bin_file_path = glob.glob(f"./*4.6*")
-    abs_path = os.path.abspath(bin_file_path[0][2:])
+
+
+    # bin_file_path = glob.glob("*4.6*")
+    # print(os.path.abspath("./Cell_X4_V4.6.binary"))
+    # print(os.path.dirname("./Cell_X4_V4.6.binary"))
+    # print(bin_file_path)
+    abs_path = program_directory + "/" + bin_fw_name
     print(abs_path)
 
     print("STM MCU firmware directory = ", abs_path)
-    write_log("STM MCU firmware directory = ", abs_path)
+    write_log("STM MCU firmware directory = " + abs_path)
 
     for i in range(1, 37):
         save_current_cell_position = i
@@ -103,7 +117,7 @@ if __name__ == '__main__':
                 write_log("Dock usb not connected ! ")
                 sys.exit(1)
             print("Fail Cell number = ", save_current_cell_position)
-            write_log("Fail Cell number = ", save_current_cell_position)
+            write_log("Fail Cell number = " + str(save_current_cell_position))
             fw_fail_device_num = fw_fail_device_num + 1
 
             print("")
